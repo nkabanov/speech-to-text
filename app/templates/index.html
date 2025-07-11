@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Voice Assistant</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'app/style.css' %}">
+</head>
+<body>
+  <h1>Голосовой помощник</h1>
+  <button onclick="startRecognition()">Начать запись</button>
+  <p id="result"></p>
+
+  <script>
+    function startRecognition() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'ru-RU';
+      recognition.start();
+
+      recognition.onresult = function(event) {
+        const text = event.results[0][0].transcript;
+        document.getElementById('result').innerText = 'Распознано: ' + text;
+
+        // Отправка текста на backend
+        fetch('/process_text', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ text })
+        }).then(res => res.json())
+          .then(data => {
+            console.log('Ответ от сервера:', data);
+          });
+      };
+
+      recognition.onerror = function(event) {
+        console.error('Ошибка распознавания:', event.error);
+      };
+    }
+  </script>
+</body>
+</html>
